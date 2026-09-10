@@ -1,0 +1,205 @@
+name: Fetch Great Lakes Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1"
+
+concurrency:
+  group: fetch-great-lakes-data
+  cancel-in-progress: false
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare directories
+        run: |
+          rm -rf data/water
+          mkdir -p data/water .water-source
+
+      - name: Download and validate sediment files
+        shell: bash
+        run: |
+          set -euo pipefail
+          download_csv() {
+            local destination="$1"
+            local url="$2"
+            local temporary="${destination}.download"
+            mkdir -p "$(dirname "$destination")"
+            curl --fail --location --retry 4 --retry-all-errors \
+              --connect-timeout 30 --max-time 1800 --silent --show-error \
+              --output "$temporary" "$url"
+            test -s "$temporary"
+            first_line="$(head -n 1 "$temporary" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//')"
+            ! printf '%s' "$first_line" | grep -Eiq '<!doctype|<html|<body'
+            printf '%s' "$first_line" | grep -q ','
+            mv "$temporary" "$destination"
+          }
+          while IFS=$'\t' read -r destination url; do
+            download_csv "$destination" "$url"
+          done <<'SEDIMENT_DOWNLOADS'
+          data/great_lakes_sediment_monitoring_sites.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_sites.csv
+          data/great_lakes_sediment_monitoring_date.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_date.csv
+          data/great_lakes_sediment_monitoring_major_ions_nutrients_metals_metalloids.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_major_ions_nutrients_metals_metalloids.csv
+          data/great_lakes_sediment_monitoring_polychlorinated_biphenyls.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_polychlorinated_biphenyls.csv
+          data/great_lakes_sediment_monitoring_polycyclic_aromatic_hydrocarbons.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_polycyclic_aromatic_hydrocarbons.csv
+          data/great_lakes_sediment_monitoring_organochlorines.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_organochlorines.csv
+          data/great_lakes_sediment_monitoring_polybrominated_diphenyl_ethers.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_polybrominated_diphenyl_ethers.csv
+          data/great_lakes_sediment_monitoring_perfluoroalkyl_substances.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_perfluoroalkyl_substances.csv
+          data/great_lakes_sediment_monitoring_halogenated_flame_retardants.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_halogenated_flame_retardants.csv
+          data/great_lakes_sediment_monitoring_phthalates.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_phthalates.csv
+          data/great_lakes_sediment_monitoring_phenols.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_phenols.csv
+          data/great_lakes_sediment_monitoring_siloxanes.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_siloxanes.csv
+          data/great_lakes_sediment_monitoring_organophosphates.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_organophosphates.csv
+          data/great_lakes_sediment_monitoring_pyrethroids.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_pyrethroids.csv
+          data/great_lakes_sediment_monitoring_amines.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_amines.csv
+          data/great_lakes_sediment_monitoring_carbon.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_carbon.csv
+          data/great_lakes_sediment_monitoring_physical.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_physical.csv
+          data/great_lakes_sediment_monitoring_radionuclides.csv	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-sediment-monitoring-and-surveillance-data%2Fgreat_lakes_sediment_monitoring_radionuclides.csv
+          SEDIMENT_DOWNLOADS
+
+      - name: Download water sites
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 1800 --silent --show-error \
+            --output data/water/great_lakes_offshore_water_quality_sites.csv \
+            "https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FGreat%20Lakes%20Offshore%20Water%20Quality%20Sites.csv"
+          test -s data/water/great_lakes_offshore_water_quality_sites.csv
+
+      - name: Download source water files
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r slug url; do
+            echo "Downloading $slug"
+            curl --fail --location --retry 4 --retry-all-errors \
+              --connect-timeout 30 --max-time 3600 --silent --show-error \
+              --output ".water-source/${slug}.csv" "$url"
+            test -s ".water-source/${slug}.csv"
+          done <<'WATER_DOWNLOADS'
+          georgian_bay	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FGeorgian%20Bay%20Water%20Quality%202000-present.csv
+          lake_huron	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FLake%20Huron%20Water%20Quality%202000-present.csv
+          lake_erie	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FLake%20Erie%20Water%20Quality%202000-present.csv
+          lake_ontario	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FLake%20Ontario%20Water%20Quality%202000-present.csv
+          lake_superior	https://data-donnees.az.ec.gc.ca/api/file?path=%2Fsubstances%2Fmonitor%2Fgreat-lakes-water-quality-monitoring-and-aquatic-ecosystem-health-data%2Fgreat-lakes-water-quality-monitoring-and-surveillance-data%2FLake%20Superior%20Water%20Quality%202000-present.csv
+          WATER_DOWNLOADS
+
+      - name: Partition water data by lake and year
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import csv
+          import json
+          from collections import defaultdict
+          from pathlib import Path
+
+          source_dir = Path('.water-source')
+          output_root = Path('data/water')
+          manifest = {
+              'schemaVersion': 1,
+              'partitionField': 'STN_DATE',
+              'sites': 'great_lakes_offshore_water_quality_sites.csv',
+              'lakes': []
+          }
+
+          for source in sorted(source_dir.glob('*.csv')):
+              slug = source.stem
+              lake_dir = output_root / slug
+              lake_dir.mkdir(parents=True, exist_ok=True)
+              handles = {}
+              writers = {}
+              counts = defaultdict(int)
+              fields = None
+
+              try:
+                  with source.open('r', encoding='utf-8-sig', newline='') as stream:
+                      reader = csv.DictReader(stream)
+                      fields = reader.fieldnames
+                      if not fields or 'STN_DATE' not in fields:
+                          raise RuntimeError(f'{source} is missing STN_DATE')
+
+                      for row in reader:
+                          date_value = (row.get('STN_DATE') or '').strip()
+                          year = date_value[:4]
+                          if len(year) != 4 or not year.isdigit():
+                              year = 'unknown'
+
+                          if year not in writers:
+                              path = lake_dir / f'{year}.csv'
+                              handle = path.open('w', encoding='utf-8', newline='')
+                              writer = csv.DictWriter(handle, fieldnames=fields)
+                              writer.writeheader()
+                              handles[year] = handle
+                              writers[year] = writer
+
+                          writers[year].writerow(row)
+                          counts[year] += 1
+              finally:
+                  for handle in handles.values():
+                      handle.close()
+
+              partitions = []
+              for year in sorted(counts):
+                  relative = f'{slug}/{year}.csv'
+                  file_path = output_root / relative
+                  size = file_path.stat().st_size
+                  if size >= 50 * 1024 * 1024:
+                      raise RuntimeError(
+                          f'Partition {relative} is {size / 1024 / 1024:.1f} MiB; '
+                          'use a finer partition before committing.'
+                      )
+                  partitions.append({
+                      'year': year,
+                      'path': relative,
+                      'records': counts[year],
+                      'bytes': size
+                  })
+
+              manifest['lakes'].append({
+                  'id': slug,
+                  'partitions': partitions,
+                  'records': sum(counts.values())
+              })
+
+          (output_root / 'manifest.json').write_text(
+              json.dumps(manifest, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(manifest, indent=2))
+          PY
+
+      - name: Verify generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s data/water/manifest.json
+          test -s data/water/great_lakes_offshore_water_quality_sites.csv
+          if find data/water -type f -size +49M -print -quit | grep -q .; then
+            echo "ERROR: A generated water file is too large for normal Git tracking."
+            find data/water -type f -size +49M -print
+            exit 1
+          fi
+          find data/water -type f -printf '%s %p\n' | sort -k2
+
+      - name: Commit and push if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data/
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -m "Update Great Lakes data - $(date -u +'%Y-%m-%d')"
+          git push
