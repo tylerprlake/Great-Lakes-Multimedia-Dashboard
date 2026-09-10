@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "partitionField": "STN_DATE",
+  "sites": "great_lakes_offshore_water_quality_sites.csv",
+  "lakes": [
+    {
+      "id": "georgian_bay",
+      "partitions": [
+        {
+          "year": "2000",
+          "path": "georgian_bay/2000.csv",
+          "records": 15241,
+          "bytes": 3019993
+        },
+        {
+          "year": "2002",
+          "path": "georgian_bay/2002.csv",
+          "records": 18557,
+          "bytes": 3667681
+        },
+        {
+          "year": "2004",
+          "path": "georgian_bay/2004.csv",
+          "records": 7739,
+          "bytes": 1530278
+        },
+        {
+          "year": "2007",
+          "path": "georgian_bay/2007.csv",
+          "records": 24793,
+          "bytes": 4948242
+        },
+        {
+          "year": "2009",
+          "path": "georgian_bay/2009.csv",
+          "records": 2376,
+          "bytes": 460433
+        },
+        {
+          "year": "2012",
+          "path": "georgian_bay/2012.csv",
+          "records": 4174,
+          "bytes": 801242
+        },
+        {
+          "year": "2014",
+          "path": "georgian_bay/2014.csv",
+          "records": 2183,
+          "bytes": 411186
+        },
+        {
+          "year": "2017",
+          "path": "georgian_bay/2017.csv",
+          "records": 4917,
+          "bytes": 954959
+        },
+        {
+          "year": "2022",
+          "path": "georgian_bay/2022.csv",
+          "records": 6024,
+          "bytes": 1179794
+        },
+        {
+          "year": "2024",
+          "path": "georgian_bay/2024.csv",
+          "records": 1853,
+          "bytes": 351327
+        }
+      ],
+      "records": 87857
+    },
+    {
+      "id": "lake_erie",
+      "partitions": [
+        {
+          "year": "2000",
+          "path": "lake_erie/2000.csv",
+          "records": 16115,
+          "bytes": 3133530
+        },
+        {
+          "year": "2002",
+          "path": "lake_erie/2002.csv",
+          "records": 21366,
+          "bytes": 4134875
+        },
+        {
+          "year": "2004",
+          "path": "lake_erie/2004.csv",
+          "records": 41004,
+          "bytes": 8050572
+        },
+        {
+          "year": "2006",
+          "path": "lake_erie/2006.csv",
+          "records": 23649,
+          "bytes": 4622969
+        },
+        {
+          "year": "2007",
+          "path": "lake_erie/2007.csv",
+          "records": 2783,
+          "bytes": 529085
+        },
+        {
+          "year": "2008",
+          "path": "lake_erie/2008.csv",
+          "records": 232,
+          "bytes": 45029
+        },
+        {
+          "year": "2009",
+          "path": "lake_erie/2009.csv",
+          "records": 15325,
+          "bytes": 2971977
+        },
+        {
+          "year": "2010",
+          "path": "lake_erie/2010.csv",
+          "records": 9736,
+          "bytes": 1917934
+        },
+        {
+          "year": "2011",
+          "path": "lake_erie/2011.csv",
+          "records": 274,
+          "bytes": 52883
+        },
+        {
+          "year": "2012",
+          "path": "lake_erie/2012.csv",
+          "records": 10699,
+          "bytes": 2045378
+        },
+        {
+          "year": "2013",
+          "path": "lake_erie/2013.csv",
+          "records": 8043,
+          "bytes": 1519748
+        },
+        {
+          "year": "2014",
+          "path": "lake_erie/2014.csv",
+          "records": 12227,
+          "bytes": 2280339
+        },
+        {
+          "year": "2015",
+          "path": "lake_erie/2015.csv",
+          "records": 7545,
+          "bytes": 1432811
+        },
+        {
+          "year": "2016",
+          "path": "lake_erie/2016.csv",
+          "records": 6104,
+          "bytes": 1142417
+        },
+        {
+          "year": "2017",
+          "path": "lake_erie/2017.csv",
+          "records": 7925,
+          "bytes": 1469031
+        },
+        {
+          "year": "2018",
+          "path": "lake_erie/2018.csv",
+          "records": 2411,
+          "bytes": 451353
+        },
+        {
+          "year": "2019",
+          "path": "lake_erie/2019.csv",
+          "records": 11246,
+          "bytes": 2177840
+        },
+        {
+          "year": "2021",
+          "path": "lake_erie/2021.csv",
+          "records": 7416,
+          "bytes": 1399249
+        },
+        {
+          "year": "2022",
+          "path": "lake_erie/2022.csv",
+          "records": 7926,
+          "bytes": 1522016
+        },
+        {
+          "year": "2023",
+          "path": "lake_erie/2023.csv",
+          "records": 12979,
+          "bytes": 2511837
+        },
+        {
+          "year": "2024",
+          "path": "lake_erie/2024.csv",
+          "records": 7542,
+          "bytes": 1470877
+        },
+        {
+          "year": "2025",
+          "path": "lake_erie/2025.csv",
+          "records": 9680,
+          "bytes": 1871935
+        }
+      ],
+      "records": 242227
+    },
+    {
+      "id": "lake_huron",
+      "partitions": [
+        {
+          "year": "2000",
+          "path": "lake_huron/2000.csv",
+          "records": 35030,
+          "bytes": 6908446
+        },
+        {
+          "year": "2002",
+          "path": "lake_huron/2002.csv",
+          "records": 33523,
+          "bytes": 6559069
+        },
+        {
+          "year": "2003",
+          "path": "lake_huron/2003.csv",
+          "records": 1537,
+          "bytes": 301285
+        },
+        {
+          "year": "2004",
+          "path": "lake_huron/2004.csv",
+          "records": 13985,
+          "bytes": 2742090
+        },
+        {
+          "year": "2005",
+          "path": "lake_huron/2005.csv",
+          "records": 29,
+          "bytes": 5658
+        },
+        {
+          "year": "2006",
+          "path": "lake_huron/2006.csv",
+          "records": 11757,
+          "bytes": 2347879
+        },
+        {
+          "year": "2007",
+          "path": "lake_huron/2007.csv",
+          "records": 62559,
+          "bytes": 12422744
+        },
+        {
+          "year": "2009",
+          "path": "lake_huron/2009.csv",
+          "records": 27241,
+          "bytes": 5393020
+        },
+        {
+          "year": "2012",
+          "path": "lake_huron/2012.csv",
+          "records": 10490,
+          "bytes": 2006139
+        },
+        {
+          "year": "2014",
+          "path": "lake_huron/2014.csv",
+          "records": 5671,
+          "bytes": 1063125
+        },
+        {
+          "year": "2015",
+          "path": "lake_huron/2015.csv",
+          "records": 4779,
+          "bytes": 908930
+        },
+        {
+          "year": "2017",
+          "path": "lake_huron/2017.csv",
+          "records": 11518,
+          "bytes": 2225220
+        },
+        {
+          "year": "2018",
+          "path": "lake_huron/2018.csv",
+          "records": 3046,
+          "bytes": 569408
+        },
+        {
+          "year": "2022",
+          "path": "lake_huron/2022.csv",
+          "records": 11520,
+          "bytes": 2232677
+        },
+        {
+          "year": "2024",
+          "path": "lake_huron/2024.csv",
+          "records": 3479,
+          "bytes": 655235
+        }
+      ],
+      "records": 236164
+    },
+    {
+      "id": "lake_ontario",
+      "partitions": [
+        {
+          "year": "2001",
+          "path": "lake_ontario/2001.csv",
+          "records": 56047,
+          "bytes": 11143517
+        },
+        {
+          "year": "2003",
+          "path": "lake_ontario/2003.csv",
+          "records": 75155,
+          "bytes": 15006759
+        },
+        {
+          "year": "2004",
+          "path": "lake_ontario/2004.csv",
+          "records": 9306,
+          "bytes": 1875834
+        },
+        {
+          "year": "2005",
+          "path": "lake_ontario/2005.csv",
+          "records": 77418,
+          "bytes": 15573443
+        },
+        {
+          "year": "2006",
+          "path": "lake_ontario/2006.csv",
+          "records": 114131,
+          "bytes": 22930185
+        },
+        {
+          "year": "2008",
+          "path": "lake_ontario/2008.csv",
+          "records": 74639,
+          "bytes": 14998562
+        },
+        {
+          "year": "2010",
+          "path": "lake_ontario/2010.csv",
+          "records": 32153,
+          "bytes": 6433901
+        },
+        {
+          "year": "2011",
+          "path": "lake_ontario/2011.csv",
+          "records": 23649,
+          "bytes": 4730468
+        },
+        {
+          "year": "2012",
+          "path": "lake_ontario/2012.csv",
+          "records": 4290,
+          "bytes": 830464
+        },
+        {
+          "year": "2013",
+          "path": "lake_ontario/2013.csv",
+          "records": 11595,
+          "bytes": 2203033
+        },
+        {
+          "year": "2015",
+          "path": "lake_ontario/2015.csv",
+          "records": 9087,
+          "bytes": 1741460
+        },
+        {
+          "year": "2016",
+          "path": "lake_ontario/2016.csv",
+          "records": 2840,
+          "bytes": 540718
+        },
+        {
+          "year": "2017",
+          "path": "lake_ontario/2017.csv",
+          "records": 3782,
+          "bytes": 717939
+        },
+        {
+          "year": "2018",
+          "path": "lake_ontario/2018.csv",
+          "records": 7105,
+          "bytes": 1368721
+        },
+        {
+          "year": "2021",
+          "path": "lake_ontario/2021.csv",
+          "records": 7759,
+          "bytes": 1484737
+        },
+        {
+          "year": "2022",
+          "path": "lake_ontario/2022.csv",
+          "records": 9847,
+          "bytes": 1877131
+        },
+        {
+          "year": "2023",
+          "path": "lake_ontario/2023.csv",
+          "records": 14258,
+          "bytes": 2798553
+        },
+        {
+          "year": "2025",
+          "path": "lake_ontario/2025.csv",
+          "records": 10729,
+          "bytes": 2079132
+        }
+      ],
+      "records": 543790
+    },
+    {
+      "id": "lake_superior",
+      "partitions": [
+        {
+          "year": "2001",
+          "path": "lake_superior/2001.csv",
+          "records": 50674,
+          "bytes": 10213759
+        },
+        {
+          "year": "2003",
+          "path": "lake_superior/2003.csv",
+          "records": 20722,
+          "bytes": 4169006
+        },
+        {
+          "year": "2005",
+          "path": "lake_superior/2005.csv",
+          "records": 41493,
+          "bytes": 8391722
+        },
+        {
+          "year": "2008",
+          "path": "lake_superior/2008.csv",
+          "records": 107112,
+          "bytes": 21778485
+        },
+        {
+          "year": "2011",
+          "path": "lake_superior/2011.csv",
+          "records": 94018,
+          "bytes": 19093672
+        },
+        {
+          "year": "2013",
+          "path": "lake_superior/2013.csv",
+          "records": 2422,
+          "bytes": 459645
+        },
+        {
+          "year": "2016",
+          "path": "lake_superior/2016.csv",
+          "records": 9630,
+          "bytes": 1859549
+        },
+        {
+          "year": "2019",
+          "path": "lake_superior/2019.csv",
+          "records": 5921,
+          "bytes": 1130487
+        },
+        {
+          "year": "2024",
+          "path": "lake_superior/2024.csv",
+          "records": 14702,
+          "bytes": 2933277
+        }
+      ],
+      "records": 346694
+    }
+  ]
+}
