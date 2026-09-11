@@ -2,7 +2,7 @@
 
 Interactive dashboard for visualizing Great Lakes sediment monitoring data from Environment and Climate Change Canada.
 
-🔗 **Live Dashboard**: [https://tylerprlake.github.io/great-lakes-sediment-dashboard/](https://tylerprlake.github.io/Great-Lakes-Multimedia-Dashboard/)
+🔗 **Live Dashboard**: [https://tylerprlake.github.io/Great-Lakes-Multimedia-Dashboard/)]
 
 ## Features
 
