@@ -343,26 +343,131 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           test -s data/water/derived/phosphorus_seasonal.csv
           test -s data/water/derived/phosphorus_parameter_matches.csv
 
           echo "Parameter-match preview:"
           head -n 10 data/water/derived/phosphorus_parameter_matches.csv
+
           echo "Derived row count:"
           wc -l data/water/derived/phosphorus_seasonal.csv
 
-          if grep -E '(^|,)(258|1839|981|2270|3763|3767)(,|$)' \
-            data/water/derived/phosphorus_seasonal.csv \
-            data/water/derived/phosphorus_parameter_matches.csv; then
-            echo "ERROR: An excluded code remains in a derived file."
+          python3 <<'PY'
+          import csv
+          from pathlib import Path
+
+          excluded_codes = {
+              '258',
+              '1839',
+              '981',
+              '2270',
+              '3763',
+              '3767',
+          }
+
+          expected_codes = {
+              '260',
+              '264',
+              '1838',
+          }
+
+          files = [
+              Path(
+                  'data/water/derived/'
+                  'phosphorus_seasonal.csv'
+              ),
+              Path(
+                  'data/water/derived/'
+                  'phosphorus_parameter_matches.csv'
+              ),
+          ]
+
+          errors = []
+
+          for path in files:
+              with path.open(
+                  'r',
+                  encoding='utf-8-sig',
+                  newline='',
+              ) as stream:
+                  reader = csv.DictReader(stream)
+
+                  if not reader.fieldnames:
+                      errors.append(
+                          f'{path} does not contain a CSV header.'
+                      )
+                      continue
+
+                  if 'CODE' not in reader.fieldnames:
+                      errors.append(
+                          f'{path} does not contain a CODE column.'
+                      )
+                      continue
+
+                  observed_codes = set()
+
+                  for row_number, row in enumerate(
+                      reader,
+                      start=2,
+                  ):
+                      code = str(
+                          row.get('CODE') or ''
+                      ).strip()
+
+                      if code:
+                          observed_codes.add(code)
+
+                      if code in excluded_codes:
+                          errors.append(
+                              f'{path}:{row_number} contains '
+                              f'excluded CODE {code}.'
+                          )
+
+                  unexpected_codes = (
+                      observed_codes
+                      - expected_codes
+                  )
+
+                  if unexpected_codes:
+                      errors.append(
+                          f'{path} contains unexpected parameter '
+                          f'codes: {sorted(unexpected_codes)}'
+                      )
+
+                  print(
+                      f'{path}: observed CODE values '
+                      f'{sorted(observed_codes)}'
+                  )
+
+          if errors:
+              print(
+                  'Derived-file validation failed:'
+              )
+              for error in errors:
+                  print(f'  - {error}')
+              raise SystemExit(1)
+
+          print(
+              'Derived-file CODE validation passed.'
+          )
+          PY
+
+          # Keep the summary below GitHub's recommended
+          # regular-file size.
+          file_size="$(
+            wc -c \
+              < data/water/derived/phosphorus_seasonal.csv
+          )"
+
+          if [ "$file_size" -ge $((50 * 1024 * 1024)) ]; then
+            echo \
+              "ERROR: phosphorus_seasonal.csv is 50 MiB or larger."
             exit 1
           fi
 
-          if [ "$(wc -c < data/water/derived/phosphorus_seasonal.csv)" \
-            -ge $((50 * 1024 * 1024)) ]; then
-            echo "ERROR: phosphorus_seasonal.csv is 50 MiB or larger."
-            exit 1
-          fi
+          echo \
+            "Derived phosphorus files passed all validation checks."
 
       - name: Commit and push if changed
         shell: bash
