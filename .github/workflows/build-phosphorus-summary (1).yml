@@ -81,19 +81,54 @@ jobs:
 
           def to_mg_l(value, unit):
               number = parse_number(value)
+          
               if number is None or number < 0:
                   return None
+          
               unit = normalize_unit(unit)
-              if unit in {'MG/L', 'MGPL'}:
+          
+              # Milligrams per litre, including phosphorus-specific notation.
+              if unit in {
+                  'MG/L',
+                  'MGP/L',
+                  'MGL',
+                  'MGPL',
+              }:
                   return number
-              if unit in {'UG/L', 'UGPL', 'MCG/L'}:
+          
+              # Micrograms per litre.
+              if unit in {
+                  'UG/L',
+                  'UGP/L',
+                  'UGL',
+                  'UGPL',
+                  'MCG/L',
+                  'MCGP/L',
+                  'MCGL',
+                  'MCGPL',
+              }:
                   return number / 1000.0
-              if unit in {'NG/L', 'NGPL'}:
+          
+              # Nanograms per litre.
+              if unit in {
+                  'NG/L',
+                  'NGP/L',
+                  'NGL',
+                  'NGPL',
+              }:
                   return number / 1_000_000.0
-              if unit in {'MG/M3', 'MGPM3'}:
+          
+              # Milligrams per cubic metre.
+              if unit in {
+                  'MG/M3',
+                  'MGP/M3',
+                  'MGM3',
+                  'MGPM3',
+              }:
                   return number / 1000.0
+          
               return None
-
+          
           def sample_depth(row):
               # DEPTH_FROM is the primary discrete sampling depth. DEPTH_TO is
               # used only when DEPTH_FROM is absent or invalid.
