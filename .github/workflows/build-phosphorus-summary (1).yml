@@ -1,0 +1,384 @@
+name: Build Water Phosphorus Summary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * 1"
+
+concurrency:
+  group: build-water-phosphorus-summary
+  cancel-in-progress: false
+
+jobs:
+  build-summary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build depth-averaged seasonal phosphorus dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/water/derived
+
+          python3 <<'PY'
+          import csv
+          import math
+          from collections import Counter, defaultdict
+          from datetime import datetime
+          from pathlib import Path
+          from statistics import median
+
+          root = Path('data/water')
+          output = root / 'derived' / 'phosphorus_seasonal.csv'
+          diagnostics = root / 'derived' / 'phosphorus_parameter_matches.csv'
+
+          # Only these discrete-depth parameters are used.
+          PARAMETERS = {
+              '260': 'Total phosphorus, unfiltered',
+              '264': 'Total phosphorus, filtered',
+              '1838': 'Phosphorus, soluble reactive',
+          }
+
+          # Source-integrated parameters are deliberately excluded.
+          EXCLUDED_CODES = {
+              '258',   # Total phosphorus, filtered-integrated
+              '1839',  # Soluble reactive phosphorus-integrated
+              '981',   # Total PCBs
+              '2270',  # Total PCBs
+              '3763',  # Total dioxins
+              '3767',  # Total furans
+          }
+
+          sources = sorted(
+              path for path in root.glob('*/*.csv')
+              if path.parent.name != 'derived'
+          )
+          if not sources:
+              raise RuntimeError(
+                  'No lake/year partitions found under data/water/<lake>/<year>.csv'
+              )
+
+          def parse_number(value):
+              try:
+                  number = float(value)
+              except (TypeError, ValueError):
+                  return None
+              return number if math.isfinite(number) else None
+
+          def normalize_unit(value):
+              return ''.join(
+                  char for char in str(value or '').upper()
+                  .replace('µ', 'U').replace('μ', 'U')
+                  if char.isalnum() or char == '/'
+              )
+
+          def to_mg_l(value, unit):
+              number = parse_number(value)
+              if number is None or number < 0:
+                  return None
+              unit = normalize_unit(unit)
+              # Milligrams per litre, including phosphorus-specific notation.
+              # normalize_unit('MG P/L') produces 'MGP/L'.
+              if unit in {'MG/L', 'MGP/L', 'MGL', 'MGPL'}:
+                  return number
+
+              # Micrograms per litre, including phosphorus-specific notation.
+              if unit in {
+                  'UG/L', 'UGP/L', 'UGL', 'UGPL',
+                  'MCG/L', 'MCGP/L', 'MCGL', 'MCGPL'
+              }:
+                  return number / 1000.0
+
+              # Nanograms per litre.
+              if unit in {'NG/L', 'NGP/L', 'NGL', 'NGPL'}:
+                  return number / 1_000_000.0
+
+              # Milligrams per cubic metre.
+              if unit in {'MG/M3', 'MGP/M3', 'MGM3', 'MGPM3'}:
+                  return number / 1000.0
+              return None
+
+          def sample_depth(row):
+              # DEPTH_FROM is the primary discrete sampling depth. DEPTH_TO is
+              # used only when DEPTH_FROM is absent or invalid.
+              depth = parse_number(row.get('DEPTH_FROM'))
+              if depth is None:
+                  depth = parse_number(row.get('DEPTH_TO'))
+              return depth
+
+          def visit_key(row, code, date_text):
+              # CRUISE_PLAN and CSN distinguish repeated station occupations.
+              return (
+                  str(row.get('WATER_BODY') or '').strip(),
+                  str(row.get('PSN') or '').strip(),
+                  date_text,
+                  str(row.get('CRUISE_PLAN') or '').strip(),
+                  str(row.get('CSN') or '').strip(),
+                  code,
+              )
+
+          def trapezoidal_depth_average(depth_values):
+              # Collapse replicate values at the same depth using their median.
+              collapsed = [
+                  (depth, median(values))
+                  for depth, values in sorted(depth_values.items())
+                  if values
+              ]
+              if not collapsed:
+                  return None
+              if len(collapsed) == 1:
+                  depth, value = collapsed[0]
+                  return {
+                      'value': value,
+                      'method': 'SINGLE_DEPTH',
+                      'depth_count': 1,
+                      'min_depth': depth,
+                      'max_depth': depth,
+                      'sampled_interval': 0.0,
+                  }
+
+              area = 0.0
+              for (z1, c1), (z2, c2) in zip(collapsed, collapsed[1:]):
+                  dz = z2 - z1
+                  if dz <= 0:
+                      continue
+                  area += (c1 + c2) * 0.5 * dz
+
+              min_depth = collapsed[0][0]
+              max_depth = collapsed[-1][0]
+              interval = max_depth - min_depth
+              if interval <= 0:
+                  return None
+
+              return {
+                  'value': area / interval,
+                  'method': 'TRAPEZOIDAL_DEPTH_AVERAGE',
+                  'depth_count': len(collapsed),
+                  'min_depth': min_depth,
+                  'max_depth': max_depth,
+                  'sampled_interval': interval,
+              }
+
+          profiles = {}
+          match_counts = Counter()
+          converted_source_counts = Counter()
+          reason_counts = Counter()
+          excluded_counts = Counter()
+          scanned = 0
+
+          for source in sources:
+              with source.open('r', encoding='utf-8-sig', newline='') as stream:
+                  reader = csv.DictReader(stream)
+                  required = {
+                      'WATER_BODY', 'PSN', 'STN_DATE', 'CODE',
+                      'VALUE', 'UNITS', 'DEPTH_FROM', 'DEPTH_TO'
+                  }
+                  missing = required.difference(reader.fieldnames or [])
+                  if missing:
+                      raise RuntimeError(
+                          f'{source} is missing required columns: {sorted(missing)}'
+                      )
+
+                  for row in reader:
+                      scanned += 1
+                      code = str(row.get('CODE') or '').strip()
+                      if code in EXCLUDED_CODES:
+                          excluded_counts[code] += 1
+                          continue
+                      if code not in PARAMETERS:
+                          continue
+
+                      diagnostic_key = (
+                          PARAMETERS[code], code,
+                          str(row.get('ABBREV') or '').strip(),
+                          str(row.get('FULL_NAME') or '').strip(),
+                          str(row.get('UNITS') or '').strip(),
+                      )
+                      match_counts[diagnostic_key] += 1
+
+                      value = to_mg_l(row.get('VALUE'), row.get('UNITS'))
+                      if value is None:
+                          reason_counts[(diagnostic_key, 'INVALID_VALUE_OR_UNIT')] += 1
+                          continue
+
+                      depth = sample_depth(row)
+                      if depth is None or depth < 0:
+                          reason_counts[(diagnostic_key, 'INVALID_DEPTH')] += 1
+                          continue
+
+                      date_text = str(row.get('STN_DATE') or '').strip()
+                      try:
+                          sample_date = datetime.fromisoformat(date_text[:10])
+                      except ValueError:
+                          reason_counts[(diagnostic_key, 'INVALID_DATE')] += 1
+                          continue
+
+                      key = visit_key(row, code, date_text)
+                      if key not in profiles:
+                          profiles[key] = {
+                              'row': row,
+                              'date': sample_date,
+                              'code': code,
+                              'depth_values': defaultdict(list),
+                              'diagnostic_key': diagnostic_key,
+                          }
+                      profiles[key]['depth_values'][depth].append(value)
+                      converted_source_counts[diagnostic_key] += 1
+
+          results = []
+          profile_methods = Counter()
+
+          for profile in profiles.values():
+              integrated = trapezoidal_depth_average(profile['depth_values'])
+              if not integrated:
+                  continue
+
+              row = profile['row']
+              date = profile['date']
+              code = profile['code']
+              season = (
+                  'Spring'
+                  if (date.month, date.day) < (6, 15)
+                  else 'Summer'
+              )
+              profile_methods[integrated['method']] += 1
+
+              sounding = parse_number(row.get('SOUNDING'))
+              coverage = None
+              if sounding is not None and sounding > 0:
+                  coverage = integrated['sampled_interval'] / sounding
+
+              results.append({
+                  'WATER_BODY': str(row.get('WATER_BODY') or '').strip(),
+                  'PSN': str(row.get('PSN') or '').strip(),
+                  'STN_DATE': str(row.get('STN_DATE') or '').strip(),
+                  'YEAR': date.year,
+                  'SEASON': season,
+                  'PARAMETER_CLASS': PARAMETERS[code],
+                  'CODE': code,
+                  'ABBREV': str(row.get('ABBREV') or '').strip(),
+                  'FULL_NAME': str(row.get('FULL_NAME') or '').strip(),
+                  'VALUE_MG_L': format(integrated['value'], '.12g'),
+                  'INTEGRATION_METHOD': integrated['method'],
+                  'DEPTH_COUNT': integrated['depth_count'],
+                  'MIN_DEPTH_M': format(integrated['min_depth'], '.12g'),
+                  'MAX_DEPTH_M': format(integrated['max_depth'], '.12g'),
+                  'SAMPLED_INTERVAL_M': format(integrated['sampled_interval'], '.12g'),
+                  'SOUNDING_M': '' if sounding is None else format(sounding, '.12g'),
+                  'SAMPLED_FRACTION_OF_SOUNDING': (
+                      '' if coverage is None else format(coverage, '.12g')
+                  ),
+                  'CRUISE_PLAN': str(row.get('CRUISE_PLAN') or '').strip(),
+                  'CSN': str(row.get('CSN') or '').strip(),
+                  'LATITUDE_DD': str(row.get('LATITUDE_DD') or '').strip(),
+                  'LONGITUDE_DD': str(row.get('LONGITUDE_DD') or '').strip(),
+              })
+
+          results.sort(key=lambda row: (
+              row['WATER_BODY'], int(row['YEAR']), row['SEASON'],
+              row['PARAMETER_CLASS'], row['PSN'], row['STN_DATE']
+          ))
+
+          fields = [
+              'WATER_BODY', 'PSN', 'STN_DATE', 'YEAR', 'SEASON',
+              'PARAMETER_CLASS', 'CODE', 'ABBREV', 'FULL_NAME',
+              'VALUE_MG_L', 'INTEGRATION_METHOD', 'DEPTH_COUNT',
+              'MIN_DEPTH_M', 'MAX_DEPTH_M', 'SAMPLED_INTERVAL_M',
+              'SOUNDING_M', 'SAMPLED_FRACTION_OF_SOUNDING',
+              'CRUISE_PLAN', 'CSN', 'LATITUDE_DD', 'LONGITUDE_DD'
+          ]
+          with output.open('w', encoding='utf-8', newline='') as stream:
+              writer = csv.DictWriter(stream, fieldnames=fields)
+              writer.writeheader()
+              writer.writerows(results)
+
+          diagnostic_fields = [
+              'PARAMETER_CLASS', 'CODE', 'ABBREV', 'FULL_NAME',
+              'UNITS_REPORTED', 'MATCHED_SOURCE_RECORDS',
+              'USABLE_SOURCE_RECORDS', 'OUTPUT_STATION_VISITS',
+              'SKIPPED_INVALID_VALUE_OR_UNIT', 'SKIPPED_INVALID_DEPTH',
+              'SKIPPED_INVALID_DATE'
+          ]
+          output_counts = Counter(
+              (row['PARAMETER_CLASS'], row['CODE']) for row in results
+          )
+          with diagnostics.open('w', encoding='utf-8', newline='') as stream:
+              writer = csv.DictWriter(stream, fieldnames=diagnostic_fields)
+              writer.writeheader()
+              for key, matched in sorted(match_counts.items()):
+                  parameter, code, abbrev, full_name, unit = key
+                  writer.writerow({
+                      'PARAMETER_CLASS': parameter,
+                      'CODE': code,
+                      'ABBREV': abbrev,
+                      'FULL_NAME': full_name,
+                      'UNITS_REPORTED': unit,
+                      'MATCHED_SOURCE_RECORDS': matched,
+                      'USABLE_SOURCE_RECORDS': converted_source_counts[key],
+                      'OUTPUT_STATION_VISITS': output_counts[(parameter, code)],
+                      'SKIPPED_INVALID_VALUE_OR_UNIT': reason_counts[(key, 'INVALID_VALUE_OR_UNIT')],
+                      'SKIPPED_INVALID_DEPTH': reason_counts[(key, 'INVALID_DEPTH')],
+                      'SKIPPED_INVALID_DATE': reason_counts[(key, 'INVALID_DATE')],
+                  })
+
+          if not results:
+              raise RuntimeError('No station-visit phosphorus results were generated.')
+
+          print(f'Scanned {scanned:,} source records from {len(sources)} partitions')
+          print(f'Built {len(profiles):,} station-visit parameter profiles')
+          print(f'Wrote {len(results):,} station-visit results to {output}')
+          print('Parameter counts:', dict(Counter(r['PARAMETER_CLASS'] for r in results)))
+          print('Integration methods:', dict(profile_methods))
+          print('Explicitly excluded codes:', dict(excluded_counts))
+          PY
+
+      - name: Validate derived files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s data/water/derived/phosphorus_seasonal.csv
+          test -s data/water/derived/phosphorus_parameter_matches.csv
+
+          echo "Parameter-match preview:"
+          head -n 10 data/water/derived/phosphorus_parameter_matches.csv
+          echo "Derived row count:"
+          wc -l data/water/derived/phosphorus_seasonal.csv
+
+          if grep -E '(^|,)(258|1839|981|2270|3763|3767)(,|$)' \
+            data/water/derived/phosphorus_seasonal.csv \
+            data/water/derived/phosphorus_parameter_matches.csv; then
+            echo "ERROR: An excluded code remains in a derived file."
+            exit 1
+          fi
+
+          if [ "$(wc -c < data/water/derived/phosphorus_seasonal.csv)" \
+            -ge $((50 * 1024 * 1024)) ]; then
+            echo "ERROR: phosphorus_seasonal.csv is 50 MiB or larger."
+            exit 1
+          fi
+
+      - name: Commit and push if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/water/derived/
+
+          if git diff --cached --quiet; then
+            echo "No phosphorus summary changes to commit."
+            exit 0
+          fi
+
+          git commit -m \
+            "Update depth-averaged phosphorus summary - $(date -u +'%Y-%m-%d')"
+          git pull --rebase origin main
+          git push origin main
