@@ -1,14 +1,14 @@
 <!DOCTYPE html>
+
 <!-- saved from url=(0061)https://tylerprlake.github.io/great-lakes-sediment-dashboard/ -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Great Lakes Multimedia Monitoring Dashboard</title>
-    <link rel="stylesheet" href="./Great Lakes Sediment Monitoring Dashboard_files/leaflet.css">
-    <script src="./Great Lakes Sediment Monitoring Dashboard_files/leaflet.js.download"></script>
-    <script src="./Great Lakes Sediment Monitoring Dashboard_files/chart.umd.min.js.download"></script>
-    <script src="./Great Lakes Sediment Monitoring Dashboard_files/papaparse.min.js.download"></script>
-    <style>
+<html lang="en"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Great Lakes Multimedia Monitoring Dashboard</title>
+
+
+
+
+<link crossorigin="" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/><script crossorigin="" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script><style>
         * {
             margin: 0;
             padding: 0;
@@ -606,1160 +606,225 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🌊 Great Lakes Multimedia Monitoring Dashboard</h1>
-            <p class="subtitle">Water Quality Monitoring and Aquatic Ecosystem Health Data</p>
-        </header>
-
-        <div id="loading" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p id="loadingText">Loading data from GitHub...</p>
-            <div class="progress-container" id="progressContainer" style="display: block;">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width: 100%;">100%</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="app" style="display: block;">
-
-            <section class="program-switcher" aria-label="Monitoring program filter">
-                <h2>Monitoring program</h2>
-                <div class="program-buttons">
-                    <button class="program-btn active" data-program="all" onclick="selectProgram('all')">All programs</button>
-                    <button class="program-btn" data-program="sediment" onclick="selectProgram('sediment')">Sediment chemistry</button>
-                    <button class="program-btn" data-program="water" onclick="selectProgram('water')">Water chemistry</button>
-                </div>
-                <div id="programSummary" style="margin-top:9px;color:#526473;">Loading both monitoring programs...</div>
-            </section>
-
-            <div class="controls">
-                <div class="control-group">
-                    <label>📊 Select Contaminant Group:</label>
-                    <div class="button-group" id="contaminantButtons"><button class="btn">Metals and Nutrients</button><button class="btn">PCBs</button><button class="btn active">PAHs</button><button class="btn">Organochlorines</button><button class="btn">PBDEs</button><button class="btn">PFAS</button><button class="btn">Halogenated Flame Retardants</button><button class="btn">Phthalates</button><button class="btn">Phenols</button><button class="btn">Siloxanes</button><button class="btn">Organophosphates</button><button class="btn">Pyrethroids</button><button class="btn">Amines</button><button class="btn">Radionuclides</button></div>
-                </div>
-
-                <div class="control-group">
-                    <label>🔬 Sample Type:</label>
-                    <div class="toggle-group">
-                        <button class="toggle-btn active" data-type="S.SURFACE" onclick="selectSampleType(&#39;S.SURFACE&#39;)">Surface</button>
-                        <button class="toggle-btn" data-type="S.CORE" onclick="selectSampleType(&#39;S.CORE&#39;)">Core</button>
-                        <button class="toggle-btn" data-type="ALL" onclick="selectSampleType(&#39;ALL&#39;)">All</button>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label>⚙️ Normalization:</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label" id="tocLabel">
-                            <input type="checkbox" id="tocNormalize" onchange="toggleNormalization()">
-                            <span>Normalize to TOC</span>
-                        </label>
-                        <label class="checkbox-label" id="finesLabel">
-                            <input type="checkbox" id="finesNormalize" onchange="toggleNormalization()">
-                            <span>Normalize to Fine Fraction (&lt;63 μm)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label>📅 Select Year:</label>
-                    <div class="button-group" id="yearButtons"><button class="btn">All Years</button><button class="btn active">2013</button><button class="btn">2014</button><button class="btn">2016</button><button class="btn">2017</button><button class="btn">2018</button><button class="btn">2019</button><button class="btn">2024</button><button class="btn">2025</button></div>
-                </div>
-
-                <div class="control-group">
-                    <label>🎯 Select Specific Contaminant (optional):</label>
-                    <select id="contaminantSelect"><option value="">All Contaminants</option><option value="1,2,6-TRIMETHYLPHENANTHRENE (1,2,6-TRIME-PHEN)">1,2,6-TRIMETHYLPHENANTHRENE (1,2,6-TRIME-PHEN)</option><option value="1,2-DIMETHYLNAPHTHALENE (1,2-DIMENAPH)">1,2-DIMETHYLNAPHTHALENE (1,2-DIMENAPH)</option><option value="1,3-DIMETHYLNAPHTHALENE">1,3-DIMETHYLNAPHTHALENE</option><option value="1,4,6,7-TETRAMETHYLNAPHTHALENE (1,4,6,7-TETRAME-NAPH)">1,4,6,7-TETRAMETHYLNAPHTHALENE (1,4,6,7-TETRAME-NAPH)</option><option value="1,7-DIMETHYLFLUORENE (1,7-DIME-FLUORENE)">1,7-DIMETHYLFLUORENE (1,7-DIME-FLUORENE)</option><option value="1,7-DIMETHYLPHENANTHRENE (1,7-DIME-PHE)">1,7-DIMETHYLPHENANTHRENE (1,7-DIME-PHE)</option><option value="1,8-DIMETHYLPHENANTHRENE (1,8-DIME-PHE)">1,8-DIMETHYLPHENANTHRENE (1,8-DIME-PHE)</option><option value="1-CHLORONAPHTHALENE">1-CHLORONAPHTHALENE</option><option value="1-METHYLCHRYSENE">1-METHYLCHRYSENE</option><option value="1-METHYLNAPHTHALENE">1-METHYLNAPHTHALENE</option><option value="1-METHYLPHENANTHRENE">1-METHYLPHENANTHRENE</option><option value="1-NITROPYRENE">1-NITROPYRENE</option><option value="2,3,5-TRIMETHYLNAPHTHALENE">2,3,5-TRIMETHYLNAPHTHALENE</option><option value="2,3,6-TRIMETHYLNAPHTHALENE (2,3,6-TRIME-NAPH)">2,3,6-TRIMETHYLNAPHTHALENE (2,3,6-TRIME-NAPH)</option><option value="2,4-DIMETHYLDIBENZOTHIOPHENE">2,4-DIMETHYLDIBENZOTHIOPHENE</option><option value="2,6-DIMETHYLNAPHTHALENE">2,6-DIMETHYLNAPHTHALENE</option><option value="2,6-DIMETHYLNAPHTHALENE-D12">2,6-DIMETHYLNAPHTHALENE-D12</option><option value="2,6-DIMETHYLPHENANTHRENE">2,6-DIMETHYLPHENANTHRENE</option><option value="2-CHLORONAPHTHALENE">2-CHLORONAPHTHALENE</option><option value="2-METHYLANTHRACENE">2-METHYLANTHRACENE</option><option value="2-METHYLCHRYSENE">2-METHYLCHRYSENE</option><option value="2-METHYLFLUORANTHENE">2-METHYLFLUORANTHENE</option><option value="2-METHYLNAPHTHALENE">2-METHYLNAPHTHALENE</option><option value="2-METHYLNAPHTHALENE-D10">2-METHYLNAPHTHALENE-D10</option><option value="2-METHYLPHENANTHRENE (2-ME-PHE)">2-METHYLPHENANTHRENE (2-ME-PHE)</option><option value="2/3-METHYLDIBENZOTHIOPHENES (2/3-ME-DBT)">2/3-METHYLDIBENZOTHIOPHENES (2/3-ME-DBT)</option><option value="3-METHYLCHOLANTHRENE">3-METHYLCHOLANTHRENE</option><option value="3-METHYLCHRYSENE">3-METHYLCHRYSENE</option><option value="3-METHYLFLUORANTHENE/BENZO(A)FLUORENE">3-METHYLFLUORANTHENE/BENZO(A)FLUORENE</option><option value="3-METHYLPHENANTHRENE (3-ME-PHE)">3-METHYLPHENANTHRENE (3-ME-PHE)</option><option value="4,6-DIMETHYLDIBENZOTHIOPHENE (4,6-DIME-DBT)">4,6-DIMETHYLDIBENZOTHIOPHENE (4,6-DIME-DBT)</option><option value="4-METHYLCHRYSENE">4-METHYLCHRYSENE</option><option value="4-METHYLCHRYSENE/6-METHYLCHRYSENE (4/6-MECHRYSENE)">4-METHYLCHRYSENE/6-METHYLCHRYSENE (4/6-MECHRYSENE)</option><option value="5,9-DIMETHYLCHRYSENE">5,9-DIMETHYLCHRYSENE</option><option value="5-METHYLCHRYSENE">5-METHYLCHRYSENE</option><option value="5/6-METHYLCHRYSENE">5/6-METHYLCHRYSENE</option><option value="6-METHYLCHRYSENE">6-METHYLCHRYSENE</option><option value="7,12-DIMETHYLBENZ(A)ANTHRACENE">7,12-DIMETHYLBENZ(A)ANTHRACENE</option><option value="7-ISOPROPYL-1-METHYLPHENANTHRENE (RETENE)">7-ISOPROPYL-1-METHYLPHENANTHRENE (RETENE)</option><option value="7-METHYLBENZO(A)PYRENE">7-METHYLBENZO(A)PYRENE</option><option value="7H-DIBENZO(C,G)CARBAZOLE">7H-DIBENZO(C,G)CARBAZOLE</option><option value="9/4-METHYLPHENANTHRENE (9/4-ME-PHE)">9/4-METHYLPHENANTHRENE (9/4-ME-PHE)</option><option value="ACENAPHTHENE">ACENAPHTHENE</option><option value="ACENAPHTHENE-D10 (ACE-D10)">ACENAPHTHENE-D10 (ACE-D10)</option><option value="ACENAPHTHENES-C1">ACENAPHTHENES-C1</option><option value="ACENAPHTHYLENE">ACENAPHTHYLENE</option><option value="ACENAPHTHYLENE-D8">ACENAPHTHYLENE-D8</option><option value="ANTHANTHRENE">ANTHANTHRENE</option><option value="ANTHRACENE">ANTHRACENE</option><option value="ANTHRACENE-D10">ANTHRACENE-D10</option><option value="BENZ(A)ANTHRACENE-D12">BENZ(A)ANTHRACENE-D12</option><option value="BENZ(A)ANTHRACENES/CHRYSENES-C3">BENZ(A)ANTHRACENES/CHRYSENES-C3</option><option value="BENZ(A)ANTHRACENES/CHRYSENES-C4">BENZ(A)ANTHRACENES/CHRYSENES-C4</option><option value="BENZO(A)ANTHRACENE">BENZO(A)ANTHRACENE</option><option value="BENZO(A)ANTHRACENES/CHRYSENES-C2">BENZO(A)ANTHRACENES/CHRYSENES-C2</option><option value="BENZO(A)PHENANTHRENE OR CHRYSENE">BENZO(A)PHENANTHRENE OR CHRYSENE</option><option value="BENZO(A)PYRENE">BENZO(A)PYRENE</option><option value="BENZO(A)PYRENE-D12">BENZO(A)PYRENE-D12</option><option value="BENZO(B)FLUORANTHENE">BENZO(B)FLUORANTHENE</option><option value="BENZO(B)FLUORANTHENE-D12">BENZO(B)FLUORANTHENE-D12</option><option value="BENZO(C)ACRIDINE">BENZO(C)ACRIDINE</option><option value="BENZO(C)PHENANTHRENE">BENZO(C)PHENANTHRENE</option><option value="BENZO(E)PYRENE">BENZO(E)PYRENE</option><option value="BENZO(G,H,I)PERYLENE">BENZO(G,H,I)PERYLENE</option><option value="BENZO(G,H,I)PERYLENE-D12 (B-GHIPER-D12)">BENZO(G,H,I)PERYLENE-D12 (B-GHIPER-D12)</option><option value="BENZO(J)FLUORANTHENE">BENZO(J)FLUORANTHENE</option><option value="BENZO(J,K)FLUORANTHENE">BENZO(J,K)FLUORANTHENE</option><option value="BENZO(K)FLUORANTHENE">BENZO(K)FLUORANTHENE</option><option value="BENZO(K)FLUORANTHENE-D12">BENZO(K)FLUORANTHENE-D12</option><option value="BENZOFLUORANTHENES/BENZOPYRENES-C1">BENZOFLUORANTHENES/BENZOPYRENES-C1</option><option value="BENZOFLUORANTHENES/BENZOPYRENES-C2">BENZOFLUORANTHENES/BENZOPYRENES-C2</option><option value="BENZOPHENANTHRENE">BENZOPHENANTHRENE</option><option value="BENZ[A]ANTHRACENES/CHRYSENES-C1">BENZ[A]ANTHRACENES/CHRYSENES-C1</option><option value="BIPHENYL">BIPHENYL</option><option value="BIPHENYL-D10">BIPHENYL-D10</option><option value="BIPHENYLS-C1">BIPHENYLS-C1</option><option value="CARBAZOLE OR DIBENZOPYRROLE">CARBAZOLE OR DIBENZOPYRROLE</option><option value="CHRYSENE">CHRYSENE</option><option value="CHRYSENE-D12 (CHRY-D12)">CHRYSENE-D12 (CHRY-D12)</option><option value="CORONENE">CORONENE</option><option value="DIBENZ(A,C)ANTHRACENE">DIBENZ(A,C)ANTHRACENE</option><option value="DIBENZ(A,J)ANTHRACENE">DIBENZ(A,J)ANTHRACENE</option><option value="DIBENZO(A,C/A,H)ANTHRACENE">DIBENZO(A,C/A,H)ANTHRACENE</option><option value="DIBENZO(A,E)FLUORANTHENE">DIBENZO(A,E)FLUORANTHENE</option><option value="DIBENZO(A,E)PYRENE">DIBENZO(A,E)PYRENE</option><option value="DIBENZO(A,H)ACRIDINE">DIBENZO(A,H)ACRIDINE</option><option value="DIBENZO(A,H)ANTHRACENE">DIBENZO(A,H)ANTHRACENE</option><option value="DIBENZO(A,H)ANTHRACENE OR DIBENZ(A,H)ANTHRACENE">DIBENZO(A,H)ANTHRACENE OR DIBENZ(A,H)ANTHRACENE</option><option value="DIBENZO(A,H)ANTHRACENE-D14">DIBENZO(A,H)ANTHRACENE-D14</option><option value="DIBENZO(A,H)PYRENE">DIBENZO(A,H)PYRENE</option><option value="DIBENZO(A,I)PYRENE">DIBENZO(A,I)PYRENE</option><option value="DIBENZOTHIOPHENE (DBT)">DIBENZOTHIOPHENE (DBT)</option><option value="DIBENZOTHIOPHENE-D8">DIBENZOTHIOPHENE-D8</option><option value="DIBENZOTHIOPHENES-C1">DIBENZOTHIOPHENES-C1</option><option value="DIBENZOTHIOPHENES-C2">DIBENZOTHIOPHENES-C2</option><option value="DIBENZOTHIOPHENES-C3">DIBENZOTHIOPHENES-C3</option><option value="DIBENZOTHIOPHENES-C4">DIBENZOTHIOPHENES-C4</option><option value="DIMETHYL BIPHENYL">DIMETHYL BIPHENYL</option><option value="FLUORANTHENE">FLUORANTHENE</option><option value="FLUORANTHENE-D10 (F-D10)">FLUORANTHENE-D10 (F-D10)</option><option value="FLUORANTHENES/PYRENES-C1">FLUORANTHENES/PYRENES-C1</option><option value="FLUORANTHENES/PYRENES-C2">FLUORANTHENES/PYRENES-C2</option><option value="FLUORANTHENES/PYRENES-C3">FLUORANTHENES/PYRENES-C3</option><option value="FLUORANTHENES/PYRENES-C4">FLUORANTHENES/PYRENES-C4</option><option value="FLUORENE">FLUORENE</option><option value="FLUORENES-C1">FLUORENES-C1</option><option value="FLUORENES-C2">FLUORENES-C2</option><option value="FLUORENES-C3">FLUORENES-C3</option><option value="INDENE">INDENE</option><option value="INDENO(1,2,3-C,D)PYRENE">INDENO(1,2,3-C,D)PYRENE</option><option value="INDENO(1,2,3-C,D)PYRENE-D12">INDENO(1,2,3-C,D)PYRENE-D12</option><option value="NAPHTHALENE">NAPHTHALENE</option><option value="NAPHTHALENE-D8">NAPHTHALENE-D8</option><option value="NAPHTHALENES-C1">NAPHTHALENES-C1</option><option value="NAPHTHALENES-C2">NAPHTHALENES-C2</option><option value="NAPHTHALENES-C3">NAPHTHALENES-C3</option><option value="NAPHTHALENES-C4">NAPHTHALENES-C4</option><option value="P-NAPHTHALENE">P-NAPHTHALENE</option><option value="PERYLENE">PERYLENE</option><option value="PERYLENE-D12">PERYLENE-D12</option><option value="PHENANTHRENE">PHENANTHRENE</option><option value="PHENANTHRENE-D10 (PHE-D10)">PHENANTHRENE-D10 (PHE-D10)</option><option value="PHENANTHRENES/ANTHRACENES-C1">PHENANTHRENES/ANTHRACENES-C1</option><option value="PHENANTHRENES/ANTHRACENES-C2">PHENANTHRENES/ANTHRACENES-C2</option><option value="PHENANTHRENES/ANTHRACENES-C3">PHENANTHRENES/ANTHRACENES-C3</option><option value="PHENANTHRENES/ANTHRACENES-C4">PHENANTHRENES/ANTHRACENES-C4</option><option value="PYRENE">PYRENE</option><option value="PYRENE-D10">PYRENE-D10</option><option value="RETENE">RETENE</option></select>
-                </div>
-
-
-            <section id="waterPanel" class="water-panel" aria-label="Water chemistry controls and results">
-                <h2 style="margin-top:0;color:#075985;">Great Lakes Surveillance Program: Water Chemistry</h2>
-                <p>Water records are kept separate from the sediment model. Choose a lake and year to load a repository partition, then filter by parameter, unit, station, depth, and result status.</p>
-                <div class="water-grid">
-                    <div class="water-field"><label for="waterLake">Lake</label><select id="waterLake"></select></div>
-                    <div class="water-field"><label for="waterYear">Year</label><select id="waterYear"></select></div>
-                    <div class="water-field"><label for="waterParameter">Parameter</label><select id="waterParameter"><option value="">All parameters</option></select></div>
-                    <div class="water-field"><label for="waterUnit">Unit</label><select id="waterUnit"><option value="">All units</option></select></div>
-                    <div class="water-field"><label for="waterStation">Station</label><select id="waterStation"><option value="">All stations</option></select></div>
-                    <div class="water-field"><label for="waterDepth">Maximum depth from (m)</label><input id="waterDepth" type="number" min="0" step="0.1" placeholder="No limit"></div>
-                    <div class="water-field"><label for="waterStatus">Result status</label><select id="waterStatus"><option value="all">All reportable results</option><option value="detected">Detected only</option><option value="nondetect">Non-detects only (&lt;)</option><option value="trace">Trace only (T)</option></select></div>
-                </div>
-                <div class="water-actions">
-                    <button class="water-button" onclick="loadSelectedWaterPartition()">Load lake and year</button>
-                    <button class="water-button secondary" onclick="resetWaterFilters()">Reset water filters</button>
-                </div>
-                <div id="waterStatusText" class="water-status">Waiting for the water manifest.</div>
-                <div id="waterStats" class="water-stats"></div>
-                <div class="water-chart-wrap"><canvas id="waterTrendChart"></canvas></div>
-                <div class="water-table-wrap">
-                    <table id="waterTable"><thead><tr><th>Date</th><th>Lake</th><th>Station</th><th>Depth</th><th>Parameter</th><th>Value</th><th>Unit</th><th>Flag</th></tr></thead><tbody></tbody></table>
-                </div>
-            </section>
-                <div class="filter-info" id="filterInfo">
-                <strong>Current Selection:</strong> PAHs - All Variables | 
-                Type: Surface |
-                Year: 2013 | 
-                Records: 198
-            </div>
-            </div>
-
-            <div class="dashboard">
-                <div class="map-container">
-                    <div id="map" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style=""><div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(456px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(712px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(456px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(712px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380.png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(456px, 430px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380(1).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(712px, 430px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(200px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(968px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(200px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(968px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380(2).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(200px, 430px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380(3).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(968px, 430px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-56px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/379(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1224px, 174px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-56px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/378(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1224px, -82px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380(4).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-56px, 430px, 0px); opacity: 1;"><img alt="" src="./Great Lakes Sediment Monitoring Dashboard_files/380(5).png" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(1224px, 430px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="1555" height="600" viewBox="-130 -50 1555 600" style="transform: translate3d(-129.57px, -50.3819px, 0px) scale(1);"><g><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(100.66684231596484, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M731,119a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(12.259155115922596, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M602,190a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(73.04298876890358, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M593,295a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(74.95548722781166, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M597,276a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(73.9586611982902, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M591,308a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(65.28677733651705, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M604,242a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(58.09572080081971, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M598,359a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(5.320633777725817, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M549,350a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path><path class="leaflet-interactive" stroke="#fff" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="hsl(48.91467435808153, 70%, 50%)" fill-opacity="0.8" fill-rule="evenodd" d="M578,381a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 "></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(70592px, 97099.6px, 0px) scale(512);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="https://tylerprlake.github.io/great-lakes-sediment-dashboard/#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="https://tylerprlake.github.io/great-lakes-sediment-dashboard/#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com/" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © OpenStreetMap contributors</div></div></div></div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Total Stations</h4>
-                        <div class="value" id="statStations">9</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Total Measurements</h4>
-                        <div class="value" id="statMeasurements">198</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Average Value</h4>
-                        <div class="value" id="statAverage">1243.994</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Max Value</h4>
-                        <div class="value" id="statMax">20200.000</div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3>📈 Trends Over Time</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="trendChart" style="box-sizing: border-box; display: block; height: 307px; width: 598px;" width="807" height="415"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3>🗺️ Highest Concentration Stations</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="stationChart" style="box-sizing: border-box; display: block; height: 307px; width: 598px;" width="807" height="415"></canvas>
-                    </div>
-                </div>
-
-                <div class="data-table">
-                    <h3>📋 Data Table</h3>
-                    <div class="table-wrapper">
-                        <table id="dataTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Site</th>
-                                    <th>Station Name</th>
-                                    <th>Matrix</th>
-                                    <th>Variable</th>
-                                    <th>Value</th>
-                                    <th>Unit</th>
-                                    <th>Depth (cm)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dataTableBody"><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHENE</td>
-                    <td>0.288</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>P-NAPHTHALENE</td>
-                    <td>0.559</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORENE</td>
-                    <td>0.655</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>DIBENZOTHIOPHENE (DBT)</td>
-                    <td>0.886</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHYLENE</td>
-                    <td>1.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>NAPHTHALENE</td>
-                    <td>1.78</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>INDENO(1,2,3-C,D)PYRENE</td>
-                    <td>2.27</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(J,K)FLUORANTHENE</td>
-                    <td>2.4</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PYRENE</td>
-                    <td>2.6</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)ANTHRACENE</td>
-                    <td>2.65</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>1-METHYLPHENANTHRENE</td>
-                    <td>2.72</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>2,3,5-TRIMETHYLNAPHTHALENE</td>
-                    <td>2.86</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>2,6-DIMETHYLNAPHTHALENE</td>
-                    <td>2.92</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>2-METHYLNAPHTHALENE</td>
-                    <td>3.42</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(E)PYRENE</td>
-                    <td>4.21</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(B)FLUORANTHENE</td>
-                    <td>4.51</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>PERYLENE</td>
-                    <td>4.67</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>PHENANTHRENE</td>
-                    <td>6.62</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZOPHENANTHRENE</td>
-                    <td>7.45</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORANTHENE</td>
-                    <td>7.95</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-05 00:00</td>
-                    <td>ON02GH0010</td>
-                    <td>DETROIT RIVER SITE 1</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PHENANTHRENE OR CHRYSENE</td>
-                    <td>9.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHENE</td>
-                    <td>518</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>DIBENZO(A,H)ANTHRACENE</td>
-                    <td>554</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>2,3,5-TRIMETHYLNAPHTHALENE</td>
-                    <td>614</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>2,6-DIMETHYLNAPHTHALENE</td>
-                    <td>705</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>1-METHYLPHENANTHRENE</td>
-                    <td>974</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>2-METHYLNAPHTHALENE</td>
-                    <td>2000</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHYLENE</td>
-                    <td>2080</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORENE</td>
-                    <td>2120</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(G,H,I)PERYLENE</td>
-                    <td>2350</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>INDENO(1,2,3-C,D)PYRENE</td>
-                    <td>2560</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(E)PYRENE</td>
-                    <td>2850</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(B)FLUORANTHENE</td>
-                    <td>3300</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(J,K)FLUORANTHENE</td>
-                    <td>3340</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>P-NAPHTHALENE</td>
-                    <td>3610</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PYRENE</td>
-                    <td>4340</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PHENANTHRENE OR CHRYSENE</td>
-                    <td>4680</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>PERYLENE</td>
-                    <td>1100</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZOPHENANTHRENE</td>
-                    <td>9540</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORANTHENE</td>
-                    <td>12000</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>NAPHTHALENE</td>
-                    <td>11300</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-06 00:00</td>
-                    <td>ON02GH0011</td>
-                    <td>DETROIT RIVER SITE 19</td>
-                    <td>S.SURFACE</td>
-                    <td>PHENANTHRENE</td>
-                    <td>11400</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(B)FLUORANTHENE</td>
-                    <td>53.7</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>PERYLENE</td>
-                    <td>53.8</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PHENANTHRENE OR CHRYSENE</td>
-                    <td>58.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZOPHENANTHRENE</td>
-                    <td>79.8</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORANTHENE</td>
-                    <td>98.7</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>PHENANTHRENE</td>
-                    <td>48.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PYRENE</td>
-                    <td>49.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(E)PYRENE</td>
-                    <td>43.2</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(G,H,I)PERYLENE</td>
-                    <td>44.4</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(J,K)FLUORANTHENE</td>
-                    <td>38.9</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>INDENO(1,2,3-C,D)PYRENE</td>
-                    <td>39.9</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>NAPHTHALENE</td>
-                    <td>27.9</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>2-METHYLNAPHTHALENE</td>
-                    <td>24.2</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>2,3,5-TRIMETHYLNAPHTHALENE</td>
-                    <td>22.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>1-METHYLPHENANTHRENE</td>
-                    <td>12.6</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>2,6-DIMETHYLNAPHTHALENE</td>
-                    <td>12.9</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>P-NAPHTHALENE</td>
-                    <td>11.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHENE</td>
-                    <td>5.45</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORENE</td>
-                    <td>7.4</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>DIBENZO(A,H)ANTHRACENE</td>
-                    <td>8.98</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0013</td>
-                    <td>DETROIT RIVER SITE 31</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHYLENE</td>
-                    <td>9.37</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>DIBENZOTHIOPHENE (DBT)</td>
-                    <td>7.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>ACENAPHTHYLENE</td>
-                    <td>5.53</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>P-NAPHTHALENE</td>
-                    <td>11.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>DIBENZO(A,H)ANTHRACENE</td>
-                    <td>13.6</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>2,6-DIMETHYLNAPHTHALENE</td>
-                    <td>15</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>1-METHYLPHENANTHRENE</td>
-                    <td>15.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>2-METHYLNAPHTHALENE</td>
-                    <td>24.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORENE</td>
-                    <td>7.92</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>2,3,5-TRIMETHYLNAPHTHALENE</td>
-                    <td>24.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>INDENO(1,2,3-C,D)PYRENE</td>
-                    <td>25.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(J,K)FLUORANTHENE</td>
-                    <td>27.6</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>NAPHTHALENE</td>
-                    <td>29.7</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(B)FLUORANTHENE</td>
-                    <td>35.4</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(G,H,I)PERYLENE</td>
-                    <td>37.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PYRENE</td>
-                    <td>37.8</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>PHENANTHRENE</td>
-                    <td>45.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(E)PYRENE</td>
-                    <td>41.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PHENANTHRENE OR CHRYSENE</td>
-                    <td>49</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>PERYLENE</td>
-                    <td>47.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORANTHENE</td>
-                    <td>76.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-06-07 00:00</td>
-                    <td>ON02GH0014</td>
-                    <td>DETROIT RIVER SITE 35</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZOPHENANTHRENE</td>
-                    <td>68.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PHENANTHRENE OR CHRYSENE</td>
-                    <td>59</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>PERYLENE</td>
-                    <td>61.9</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZOPHENANTHRENE</td>
-                    <td>90.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>FLUORANTHENE</td>
-                    <td>101</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>PHENANTHRENE</td>
-                    <td>52.8</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(B)FLUORANTHENE</td>
-                    <td>46.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)ANTHRACENE</td>
-                    <td>35.8</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(G,H,I)PERYLENE</td>
-                    <td>37.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(E)PYRENE</td>
-                    <td>40.6</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(A)PYRENE</td>
-                    <td>41.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>INDENO(1,2,3-C,D)PYRENE</td>
-                    <td>31.3</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>BENZO(J,K)FLUORANTHENE</td>
-                    <td>34</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>2,3,5-TRIMETHYLNAPHTHALENE</td>
-                    <td>24.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>NAPHTHALENE</td>
-                    <td>19.7</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>2-METHYLNAPHTHALENE</td>
-                    <td>20.1</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr>
-                    <td>2013-05-09 00:00</td>
-                    <td>ON02GH0015</td>
-                    <td>DETROIT RIVER SITE 37</td>
-                    <td>S.SURFACE</td>
-                    <td>1-METHYLPHENANTHRENE</td>
-                    <td>14.5</td>
-                    <td>NG/G</td>
-                    <td>0.0 to -3.0</td>
-                </tr><tr><td colspan="8" style="text-align: center; font-style: italic; color: #666;">
-                    Showing first 100 of 198 records
-                </td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="error" class="error" style="display: none;"></div>
-    </div>
-
-    <!-- Normalizing Overlay -->
-    <div id="normalizingOverlay" class="normalizing-overlay" style="display: none;">
-        <div class="normalizing-content">
-            <div class="spinner"></div>
-            <p style="margin-top: 20px; font-size: 1.2em; font-weight: 600;">Processing data...</p>
-            <p>Press ESC to cancel</p>
-        </div>
-    </div>
-
-    <!-- Core Profile Modal -->
-    <div id="coreModal" class="modal" style="display: none;">
-        <div class="modal-content modal-content-wide">
-            <span class="close" onclick="closeCoreModal()">×</span>
-            <h2 id="coreModalTitle">Core Profile - LAKE HURON SITE 43</h2>
-            
-            <div class="core-info" id="coreModalInfo">
-                <strong>Site ID:</strong> ON02IH0510 | 
+<div class="container">
+<header>
+<h1>🌊 Great Lakes Multimedia Monitoring Dashboard</h1>
+<p class="subtitle">Water Quality Monitoring and Aquatic Ecosystem Health Data</p>
+</header>
+<div class="loading" id="loading" style="display: block;">
+<div class="spinner"></div>
+<p id="loadingText">Loading data from GitHub...</p>
+<div class="progress-container" id="progressContainer" style="display: block;">
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
+</div>
+</div>
+</div>
+<div id="app" style="display: none;">
+<section aria-label="Monitoring program filter" class="program-switcher">
+<h2>Monitoring program</h2>
+<div class="program-buttons">
+<button class="program-btn active" data-program="all" onclick="selectProgram('all')">All programs</button>
+<button class="program-btn" data-program="sediment" onclick="selectProgram('sediment')">Sediment chemistry</button>
+<button class="program-btn" data-program="water" onclick="selectProgram('water')">Water chemistry</button>
+</div>
+<div id="programSummary" style="margin-top:9px;color:#526473;">Loading both monitoring programs...</div>
+</section>
+<div class="controls">
+<div class="control-group">
+<label>📊 Select Contaminant Group:</label>
+<div class="button-group" id="contaminantButtons"></div>
+</div>
+<div class="control-group">
+<label>🔬 Sample Type:</label>
+<div class="toggle-group">
+<button class="toggle-btn active" data-type="S.SURFACE" onclick="selectSampleType('S.SURFACE')">Surface</button>
+<button class="toggle-btn" data-type="S.CORE" onclick="selectSampleType('S.CORE')">Core</button>
+<button class="toggle-btn" data-type="ALL" onclick="selectSampleType('ALL')">All</button>
+</div>
+</div>
+<div class="control-group">
+<label>⚙️ Normalization:</label>
+<div class="checkbox-group">
+<label class="checkbox-label" id="tocLabel">
+<input id="tocNormalize" onchange="toggleNormalization()" type="checkbox"/>
+<span>Normalize to TOC</span>
+</label>
+<label class="checkbox-label" id="finesLabel">
+<input id="finesNormalize" onchange="toggleNormalization()" type="checkbox"/>
+<span>Normalize to Fine Fraction (&lt;63 μm)</span>
+</label>
+</div>
+</div>
+<div class="control-group">
+<label>📅 Select Year:</label>
+<div class="button-group" id="yearButtons"></div>
+</div>
+<div class="control-group">
+<label>🎯 Select Specific Contaminant (optional):</label>
+<select id="contaminantSelect"><option value="">All Contaminants</option></select>
+</div>
+<section aria-label="Water chemistry controls and results" class="water-panel" id="waterPanel">
+<h2 style="margin-top:0;color:#075985;">Great Lakes Surveillance Program: Water Chemistry</h2>
+<p>Water records are kept separate from the sediment model. Choose a lake and year to load a repository partition, then filter by parameter, unit, station, depth, and result status.</p>
+<div class="water-grid">
+<div class="water-field"><label for="waterLake">Lake</label><select id="waterLake"></select></div>
+<div class="water-field"><label for="waterYear">Year</label><select id="waterYear"></select></div>
+<div class="water-field"><label for="waterParameter">Parameter</label><select id="waterParameter"><option value="">All parameters</option></select></div>
+<div class="water-field"><label for="waterUnit">Unit</label><select id="waterUnit"><option value="">All units</option></select></div>
+<div class="water-field"><label for="waterStation">Station</label><select id="waterStation"><option value="">All stations</option></select></div>
+<div class="water-field"><label for="waterDepth">Maximum depth from (m)</label><input id="waterDepth" min="0" placeholder="No limit" step="0.1" type="number"/></div>
+<div class="water-field"><label for="waterStatus">Result status</label><select id="waterStatus"><option value="all">All reportable results</option><option value="detected">Detected only</option><option value="nondetect">Non-detects only (&lt;)</option><option value="trace">Trace only (T)</option></select></div>
+</div>
+<div class="water-actions">
+<button class="water-button" onclick="loadSelectedWaterPartition()">Load lake and year</button>
+<button class="water-button secondary" onclick="resetWaterFilters()">Reset water filters</button>
+</div>
+<div class="water-status" id="waterStatusText">Waiting for the water manifest.</div>
+<div class="water-stats" id="waterStats"></div>
+<div class="water-chart-wrap"><canvas id="waterTrendChart"></canvas></div>
+<div class="water-table-wrap">
+<table id="waterTable"><thead><tr><th>Date</th><th>Lake</th><th>Station</th><th>Depth</th><th>Parameter</th><th>Value</th><th>Unit</th><th>Flag</th></tr></thead><tbody></tbody></table>
+</div>
+</section>
+<div class="filter-info" id="filterInfo">Sediment filters will appear after the data load.</div>
+</div>
+<div class="dashboard">
+<div class="map-container">
+<div id="map"></div>
+</div>
+<div class="stats-grid">
+<div class="stat-card">
+<h4>Total Stations</h4>
+<div class="value" id="statStations">0</div>
+</div>
+<div class="stat-card">
+<h4>Total Measurements</h4>
+<div class="value" id="statMeasurements">0</div>
+</div>
+<div class="stat-card">
+<h4>Average Value</h4>
+<div class="value" id="statAverage">0</div>
+</div>
+<div class="stat-card">
+<h4>Max Value</h4>
+<div class="value" id="statMax">0</div>
+</div>
+</div>
+<div class="chart-container">
+<h3>📈 Trends Over Time</h3>
+<div class="chart-wrapper">
+<canvas id="trendChart"></canvas>
+</div>
+</div>
+<div class="chart-container">
+<h3>🗺️ Highest Concentration Stations</h3>
+<div class="chart-wrapper">
+<canvas id="stationChart"></canvas>
+</div>
+</div>
+<div class="data-table">
+<h3>📋 Data Table</h3>
+<div class="table-wrapper">
+<table id="dataTable">
+<thead>
+<tr>
+<th>Date</th>
+<th>Site</th>
+<th>Station Name</th>
+<th>Matrix</th>
+<th>Variable</th>
+<th>Value</th>
+<th>Unit</th>
+<th>Depth (cm)</th>
+</tr>
+</thead>
+<tbody id="dataTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="error" id="error" style="display: none;"></div>
+</div>
+<!-- Normalizing Overlay -->
+<div class="normalizing-overlay" id="normalizingOverlay" style="display: none;">
+<div class="normalizing-content">
+<div class="spinner"></div>
+<p style="margin-top: 20px; font-size: 1.2em; font-weight: 600;">Processing data...</p>
+<p>Press ESC to cancel</p>
+</div>
+</div>
+<!-- Core Profile Modal -->
+<div class="modal" id="coreModal" style="display: none;">
+<div class="modal-content modal-content-wide">
+<span class="close" onclick="closeCoreModal()">×</span>
+<h2 id="coreModalTitle">Core Profile - LAKE HURON SITE 43</h2>
+<div class="core-info" id="coreModalInfo">
+<strong>Site ID:</strong> ON02IH0510 | 
                 <strong>Collection Date:</strong> 2017-09-12 | 
                 <strong>Contaminant Group:</strong> PCBs
             </div>
-            
-            <div class="core-controls">
-                <div>
-                    <label>Select Contaminant:</label>
-                    <select id="coreContaminantSelect" onchange="updateCoreProfileForVariable()"><option value="">Select a contaminant...</option><option value="2,2&#39;,3,3&#39;,4,4&#39;,5,5&#39;,6-NONACHLOROBIPHENYL (PCB 206)">2,2',3,3',4,4',5,5',6-NONACHLOROBIPHENYL (PCB 206)</option><option value="2,2&#39;,3,3&#39;,4,4&#39;,5,5&#39;-OCTACHLOROBIPHENYL (PCB 194)">2,2',3,3',4,4',5,5'-OCTACHLOROBIPHENYL (PCB 194)</option><option value="2,2&#39;,3,3&#39;,4,4&#39;,5-HEPTACHLOROBIPHENYL (PCB 170)">2,2',3,3',4,4',5-HEPTACHLOROBIPHENYL (PCB 170)</option><option value="2,2&#39;,3,3&#39;,4,4&#39;,6-HEPTACHLOROBIPHENYL (PCB 171)">2,2',3,3',4,4',6-HEPTACHLOROBIPHENYL (PCB 171)</option><option value="2,2&#39;,3,3&#39;,4,5&#39;,6&#39;-HEPTACHLOROBIPHENYL (PCB 177)">2,2',3,3',4,5',6'-HEPTACHLOROBIPHENYL (PCB 177)</option><option value="2,2&#39;,3,3&#39;,4,5,5&#39;,6&#39;-OCTACHLOROBIPHENYL (PCB 199)">2,2',3,3',4,5,5',6'-OCTACHLOROBIPHENYL (PCB 199)</option><option value="2,2&#39;,3,3&#39;,4,5,5&#39;,6,6&#39;-NONACHLOROBIPHENYL (PCB 208)">2,2',3,3',4,5,5',6,6'-NONACHLOROBIPHENYL (PCB 208)</option><option value="2,2&#39;,3,3&#39;,4,5,5&#39;,6,6&#39;-NONACHLOROBIPHENYL-13C12 (PCB 208)">2,2',3,3',4,5,5',6,6'-NONACHLOROBIPHENYL-13C12 (PCB 208)</option><option value="2,2&#39;,3,3&#39;,4,6&#39;-HEXACHLOROBIPHENYL (PCB 132)">2,2',3,3',4,6'-HEXACHLOROBIPHENYL (PCB 132)</option><option value="2,2&#39;,3,3&#39;,4-PENTACHLOROBIPHENYL (PCB 82)">2,2',3,3',4-PENTACHLOROBIPHENYL (PCB 82)</option><option value="2,2&#39;,3,3&#39;,5,5&#39;,6-HEPTACHLOROBIPHENYL-13C12 (PCB 178)">2,2',3,3',5,5',6-HEPTACHLOROBIPHENYL-13C12 (PCB 178)</option><option value="2,2&#39;,3,4&#39;,5&#39;,6-HEXACHLOROBIPHENYL (PCB 149)">2,2',3,4',5',6-HEXACHLOROBIPHENYL (PCB 149)</option><option value="2,2&#39;,3,4&#39;,5,5&#39;,6-HEPTACHLOROBIPHENYL (PCB 187)">2,2',3,4',5,5',6-HEPTACHLOROBIPHENYL (PCB 187)</option><option value="2,2&#39;,3,4,4&#39;,5&#39;,6-HEPTACHLOROBIPHENYL (PCB 183)">2,2',3,4,4',5',6-HEPTACHLOROBIPHENYL (PCB 183)</option><option value="2,2&#39;,3,4,4&#39;,5,5&#39;-HEPTACHLOROBIPHENYL (PCB 180)">2,2',3,4,4',5,5'-HEPTACHLOROBIPHENYL (PCB 180)</option><option value="2,2&#39;,3,4,5&#39;-PENTACHLOROBIPHENYL (PCB 87)">2,2',3,4,5'-PENTACHLOROBIPHENYL (PCB 87)</option><option value="2,2&#39;,3,5&#39;,6-PENTACHLOROBIPHENYL (PCB 95)">2,2',3,5',6-PENTACHLOROBIPHENYL (PCB 95)</option><option value="2,2&#39;,3,5&#39;-TETRACHLOROBIPHENYL (PCB 44)">2,2',3,5'-TETRACHLOROBIPHENYL (PCB 44)</option><option value="2,2&#39;,3,5,5&#39;,6-HEXACHLOROBIPHENYL (PCB 151)">2,2',3,5,5',6-HEXACHLOROBIPHENYL (PCB 151)</option><option value="2,2&#39;,4,4&#39;,5,5&#39;-HEXACHLOROBIPHENYL (PCB 153)">2,2',4,4',5,5'-HEXACHLOROBIPHENYL (PCB 153)</option><option value="2,2&#39;,4,4&#39;,5,5&#39;-HEXACHLOROBIPHENYL-13C12 (PCB 153)">2,2',4,4',5,5'-HEXACHLOROBIPHENYL-13C12 (PCB 153)</option><option value="2,2&#39;,4,4&#39;,5-PENTACHLOROBIPHENYL (PCB 99)">2,2',4,4',5-PENTACHLOROBIPHENYL (PCB 99)</option><option value="2,2&#39;,4,5&#39;-TETRACHLOROBIPHENYL (PCB 49)">2,2',4,5'-TETRACHLOROBIPHENYL (PCB 49)</option><option value="2,2&#39;,4,5,5&#39;-PENTACHLOROBIPHENYL (PCB 101)">2,2',4,5,5'-PENTACHLOROBIPHENYL (PCB 101)</option><option value="2,2&#39;,4-TRICHLOROBIPHENYL (PCB 17)">2,2',4-TRICHLOROBIPHENYL (PCB 17)</option><option value="2,2&#39;,5,5&#39;-TETRACHLOROBIPHENYL (PCB 52)">2,2',5,5'-TETRACHLOROBIPHENYL (PCB 52)</option><option value="2,2&#39;,5,5&#39;-TETRACHLOROBIPHENYL-13C12 (PCB 52)">2,2',5,5'-TETRACHLOROBIPHENYL-13C12 (PCB 52)</option><option value="2,2&#39;,5-TRICHLOROBIPHENYL (PCB 18)">2,2',5-TRICHLOROBIPHENYL (PCB 18)</option><option value="2,2&#39;3,3&#39;,4,4&#39;-HEXACHLOROBIPHENYL (PCB 128)">2,2'3,3',4,4'-HEXACHLOROBIPHENYL (PCB 128)</option><option value="2,2,&#39;3,3&#39;,4,4&#39;,5,6-OCTACHLOROBIPHENYL (PCB 195)">2,2,'3,3',4,4',5,6-OCTACHLOROBIPHENYL (PCB 195)</option><option value="2,3&#39;,4&#39;,5-TETRACHLOROBIPHENYL (PCB 70)">2,3',4',5-TETRACHLOROBIPHENYL (PCB 70)</option><option value="2,3&#39;,4&#39;-TRICHLOROBIPHENYL (PCB 33)">2,3',4'-TRICHLOROBIPHENYL (PCB 33)</option><option value="2,3&#39;,4,4&#39;,5-PENTACHLOROBIPHENYL (PCB 118)">2,3',4,4',5-PENTACHLOROBIPHENYL (PCB 118)</option><option value="2,3,3&#39;,4&#39;,6-PENTACHLOROBIPHENYL (PCB 110)">2,3,3',4',6-PENTACHLOROBIPHENYL (PCB 110)</option><option value="2,3,3&#39;,4,4&#39;,5&#39;,6-HEPTACHLOROBIPHENYL (PCB 191)">2,3,3',4,4',5',6-HEPTACHLOROBIPHENYL (PCB 191)</option><option value="2,3,3&#39;,4,4&#39;,5,5&#39;,6-OCTACHLOROBIPHENYL (PCB 205)">2,3,3',4,4',5,5',6-OCTACHLOROBIPHENYL (PCB 205)</option><option value="2,3,3&#39;,4,4&#39;,5-HEXACHLOROBIPHENYL (PCB 156)">2,3,3',4,4',5-HEXACHLOROBIPHENYL (PCB 156)</option><option value="2,3,3&#39;,4,4&#39;,6-HEXACHLOROBIPHENYL (PCB 158)">2,3,3',4,4',6-HEXACHLOROBIPHENYL (PCB 158)</option><option value="2,3,3&#39;,5,5&#39;-PENTACHLOROBIPHENYL-13C12 (PCB 111)">2,3,3',5,5'-PENTACHLOROBIPHENYL-13C12 (PCB 111)</option><option value="2,3,3&#39;4,4&#39;-PENTACHLOROBIPHENYL (PCB 105)">2,3,3'4,4'-PENTACHLOROBIPHENYL (PCB 105)</option><option value="2,4&#39;,5-TRICHLOROBIPHENYL (PCB 31)">2,4',5-TRICHLOROBIPHENYL (PCB 31)</option><option value="2,4,4&#39;,5-TETRACHLOROBIPHENYL (PCB 74)">2,4,4',5-TETRACHLOROBIPHENYL (PCB 74)</option><option value="2,4,4&#39;-TRICHLOROBIPHENYL (PCB 28)">2,4,4'-TRICHLOROBIPHENYL (PCB 28)</option><option value="2,4,4&#39;-TRICHLOROBIPHENYL-13C12 (PCB 28)">2,4,4'-TRICHLOROBIPHENYL-13C12 (PCB 28)</option><option value="3,3&#39;,4,4&#39;,5,5&#39;-HEXACHLOROBIPHENYL (PCB 169)">3,3',4,4',5,5'-HEXACHLOROBIPHENYL (PCB 169)</option><option value="DECACHLOROBIPHENYL (PCB 209)">DECACHLOROBIPHENYL (PCB 209)</option><option value="PCB 103">PCB 103</option><option value="PCB 138">PCB 138</option><option value="PCB 198">PCB 198</option><option value="TOTAL HEPTACHLOROBIPHENYLS (PCB 170-193)">TOTAL HEPTACHLOROBIPHENYLS (PCB 170-193)</option><option value="TOTAL HEXACHLOROBIPHENYLS (PCB 128-169)">TOTAL HEXACHLOROBIPHENYLS (PCB 128-169)</option><option value="TOTAL NONACHLOROBIPHENYLS (PCB 206-208)">TOTAL NONACHLOROBIPHENYLS (PCB 206-208)</option><option value="TOTAL OCTACHLOROBIPHENYLS (PCB 194-205)">TOTAL OCTACHLOROBIPHENYLS (PCB 194-205)</option><option value="TOTAL PCBS">TOTAL PCBS</option><option value="TOTAL PENTACHLOROBIPHENYLS (PCB 82-127)">TOTAL PENTACHLOROBIPHENYLS (PCB 82-127)</option><option value="TOTAL TETRACHLOROBIPHENYLS (PCB 40-81)">TOTAL TETRACHLOROBIPHENYLS (PCB 40-81)</option><option value="TOTAL TRICHLOROBIPHENYLS (PCB 16-39)">TOTAL TRICHLOROBIPHENYLS (PCB 16-39)</option></select>
+<div class="core-controls">
+<div>
+<label>Select Contaminant:</label>
+<select id="coreContaminantSelect" onchange="updateCoreProfileForVariable()"><option value="">Select a contaminant...</option></select>
+</div>
+<div style="display: flex; gap: 10px;">
+<button class="btn btn-secondary" onclick="showCoreDiagram()">📊 Core Diagram</button>
+</div>
+</div>
+<div class="core-controls" id="coreNormContainer">
+<div class="checkbox-group">
+<label class="checkbox-label" id="coreNormTocLabel" style="display: flex;">
+<input id="coreNormToc" onchange="updateCoreNormalization()" type="checkbox"/>
+<span>Normalize to TOC</span>
+</label>
+<label class="checkbox-label" id="coreNormFinesLabel" style="display: none;">
+<input id="coreNormFines" onchange="updateCoreNormalization()" type="checkbox"/>
+<span>Normalize to Fine Fraction</span>
+</label>
+</div>
+</div>
+<div class="warning-box hidden" id="noDataWarning">
+<strong>⚠️ No data available with current settings</strong>
+<p>This may be because normalization data is not available for this core sample.</p>
+</div>
+<div class="core-profile-container">
+<div class="core-chart-wrapper" id="coreChartContainer" style="display: block;">
+<canvas id="coreProfileChart"></canvas>
+</div>
+</div>
+<div class="legend" id="coreLegend" style="display: block;">
+<strong>Core Profile:</strong> 2,2',3,3',4,4',5,5',6-NONACHLOROBIPHENYL (PCB 206) - 15 depth measurements<br/>
+<div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+<strong>Note:</strong> 0 cm represents the sediment-water interface. Negative values indicate depth below the interface.
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="showCoreDiagram()">📊 Core Diagram</button>
-                </div>
-            </div>
-
-            <div class="core-controls" id="coreNormContainer">
-                <div class="checkbox-group">
-                    <label class="checkbox-label" id="coreNormTocLabel" style="display: flex;">
-                        <input type="checkbox" id="coreNormToc" onchange="updateCoreNormalization()">
-                        <span>Normalize to TOC</span>
-                    </label>
-                    <label class="checkbox-label" id="coreNormFinesLabel" style="display: none;">
-                        <input type="checkbox" id="coreNormFines" onchange="updateCoreNormalization()">
-                        <span>Normalize to Fine Fraction</span>
-                    </label>
-                </div>
-            </div>
-
-            <div id="noDataWarning" class="warning-box hidden">
-                <strong>⚠️ No data available with current settings</strong>
-                <p>This may be because normalization data is not available for this core sample.</p>
-            </div>
-            
-            <div class="core-profile-container">
-                <div class="core-chart-wrapper" id="coreChartContainer" style="display: block;">
-                    <canvas id="coreProfileChart" style="box-sizing: border-box;" width="300"></canvas>
-                </div>
-            </div>
-
-            <div class="legend" id="coreLegend" style="display: block;">
-                <strong>Core Profile:</strong> 2,2',3,3',4,4',5,5',6-NONACHLOROBIPHENYL (PCB 206) - 15 depth measurements<br>
-                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                    <strong>Note:</strong> 0 cm represents the sediment-water interface. Negative values indicate depth below the interface.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Core Diagram Modal -->
-    <div id="coreDiagramModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeCoreDiagramModal()">×</span>
-            <h2>Core Diagram</h2>
-            
-            <div class="diagram-info" id="diagramInfo"></div>
-            
-            <div class="core-diagram-container">
-                <div style="position: relative;">
-                    <div class="water-interface-diagram"></div>
-                    <div class="core-visual" id="diagramCoreVisual"></div>
-                </div>
-                <div style="padding: 20px;">
-                    <h3>Core Slices</h3>
-                    <div id="sliceDetails"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
+</div>
+</div>
+</div>
+<!-- Core Diagram Modal -->
+<div class="modal" id="coreDiagramModal">
+<div class="modal-content">
+<span class="close" onclick="closeCoreDiagramModal()">×</span>
+<h2>Core Diagram</h2>
+<div class="diagram-info" id="diagramInfo"></div>
+<div class="core-diagram-container">
+<div style="position: relative;">
+<div class="water-interface-diagram"></div>
+<div class="core-visual" id="diagramCoreVisual"></div>
+</div>
+<div style="padding: 20px;">
+<h3>Core Slices</h3>
+<div id="sliceDetails"></div>
+</div>
+</div>
+</div>
+</div>
+<script>
         const GITHUB_USER = 'tylerprlake';
         const GITHUB_REPO = 'Great-Lakes-Multimedia-Dashboard';
-        const GITHUB_DATA_URL = `https://${GITHUB_USER}.github.io/${GITHUB_REPO}/data/`;
+        const GITHUB_DATA_URL = new URL('./data/', window.location.href).href;
 
         const state = {
             contaminantData: {},
@@ -1912,16 +977,24 @@
             mergeData();
         }
 
-        function loadCSV(url) {
-            return new Promise((resolve, reject) => {
-                Papa.parse(url, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: (results) => resolve(results.data),
-                    error: (error) => reject(error)
-                });
+        async function loadCSV(url) {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`CSV request failed (${response.status}) for ${url}`);
+            }
+            const text = await response.text();
+            const trimmed = text.trimStart().toLowerCase();
+            if (trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+                throw new Error(`Expected CSV but received HTML from ${url}`);
+            }
+            const results = Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true
             });
+            if (results.errors.length && !results.data.length) {
+                throw new Error(`CSV parse failed for ${url}: ${results.errors[0].message}`);
+            }
+            return results.data;
         }
 
         function mergeData() {
@@ -2507,7 +1580,7 @@
 
         function getColorForValue(value) {
             const val = parseFloat(value);
-            if (isNaN(val) || val === 0) return '#gray';
+            if (isNaN(val) || val === 0) return '#808080';
             
             const log = Math.log10(val + 1);
             const hue = Math.max(0, 120 - (log * 30));
@@ -3129,8 +2202,8 @@
                 selectProgram('all');
             } catch (error) {
                 console.error(error);
-                status.textContent = 'Water data could not be initialized: ' + error.message;
-                document.getElementById('programSummary').textContent = 'Sediment data loaded. Water data initialization failed; check data/water/manifest.json.';
+                status.textContent = 'Water data could not be initialized: ' + error.message + ' | Manifest URL: ' + WATER_DATA_URL + 'manifest.json';
+                document.getElementById('programSummary').textContent = 'Water initialization failed. See the detailed message in the Water Chemistry panel.';
             }
         }
 
@@ -3238,10 +2311,13 @@
         function formatLakeName(id){return String(id||'').split('_').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
         function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
-        setTimeout(initializeWaterProgram, 1200);
+        async function startDashboard() {
+            await init();
+            if (state.map) {
+                await initializeWaterProgram();
+            }
+        }
 
-        init();
+        startDashboard();
     </script>
-
-
 </body></html>
