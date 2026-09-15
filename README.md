@@ -1,6 +1,6 @@
-# Great Lakes Sediment Monitoring Dashboard
+# Great Lakes Multimedia Monitoring Dashboard
 
-Interactive dashboard for visualizing Great Lakes sediment monitoring data from Environment and Climate Change Canada.
+Interactive dashboard for visualizing Great Lakes monitoring data from Environment and Climate Change Canada.
 
 🔗 **Live Dashboard**: https://tylerprlake.github.io/Great-Lakes-Multimedia-Dashboard/
 
@@ -11,6 +11,7 @@ Interactive dashboard for visualizing Great Lakes sediment monitoring data from 
 - Core profile visualization with depth charts
 - Trend analysis over time
 - Station comparison charts
+- Water Surveillance netwrok information with TP/SRP plotting across seasons
 
 ## Data Updates
 
